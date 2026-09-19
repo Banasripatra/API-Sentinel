@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Sentinel</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: white;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px 25px;
+        }
+
+        header h1 {
+            font-size: 44px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 17px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .api-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 350px;
+            background: #020617;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            border-radius: 10px;
+            padding: 15px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #38bdf8;
+        }
+
+        .button-area {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 17px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        #error {
+            color: #f87171;
+            margin-top: 15px;
+        }
+
+        #result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat h3 {
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+
+        .stat p {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .changes {
+            margin-top: 20px;
+        }
+
+        .change {
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid;
+            background: #1e293b;
+        }
+
+        .breaking {
+            border-left-color: #ef4444;
+        }
+
+        .safe {
+            border-left-color: #22c55e;
+        }
+
+        .change h3 {
+            margin-bottom: 8px;
+        }
+
+        .change p {
+            color: #cbd5e1;
+            margin: 5px 0;
+        }
+
+        .risk-high {
+            color: #ef4444;
+        }
+
+        .risk-medium {
+            color: #f59e0b;
+        }
+
+        .risk-low {
+            color: #22c55e;
+        }
+
+        @media (max-width: 800px) {
+            .api-container,
+            .summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🛡️ API Sentinel</h1>
+    <p>Detect API Breaking Changes Before They Break Your Application</p>
+</header>
+
+<div class="container">
+
+    <div class="api-container">
+
+        <div class="card">
+            <h2>API Version 1</h2>
+
+            <textarea id="apiV1">{
+  "endpoints": {
+    "/student": {
+      "response": {
+        "id": "integer",
+        "name": "string",
+        "age": "integer"
+      }
+    }
+  }
+}</textarea>
+        </div>
+
+        <div class="card">
+            <h2>API Version 2</h2>
+
+            <textarea id="apiV2">{
+  "endpoints": {
+    "/student": {
+      "response": {
+        "id": "integer",
+        "name": "string"
+      }
+    },
+    "/students": {
+      "response": {
+        "id": "integer",
+        "name": "string"
+      }
+    }
+  }
+}</textarea>
+        </div>
+
+    </div>
+
+    <div class="button-area">
+
+        <button onclick="analyzeAPI()">
+            🔍 Analyze API
+        </button>
+
+        <p id="error"></p>
+
+    </div>
+
+
+    <div id="result">
+
+        <h2>Compatibility Report</h2>
+
+        <div class="summary">
+
+            <div class="stat">
+                <h3>Total Changes</h3>
+                <p id="totalChanges">0</p>
+            </div>
+
+            <div class="stat">
+                <h3>Breaking</h3>
+                <p id="breakingChanges">0</p>
+            </div>
+
+            <div class="stat">
+                <h3>Safe</h3>
+                <p id="safeChanges">0</p>
+            </div>
+
+            <div class="stat">
+                <h3>Risk</h3>
+                <p id="risk">-</p>
+            </div>
+           <div class="stat">
+            <h3>score</h3>  
+            <p id="score">0%</p>
+            </div>  
+        </div>
+        </div>
+
+        <div class="changes" id="changesList"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+async function analyzeAPI() {
+
+    const error = document.getElementById("error");
+
+    error.innerText = "";
+
+    let apiV1;
+    let apiV2;
+
+    try {
+
+        apiV1 = JSON.parse(
+            document.getElementById("apiV1").value
+        );
+
+        apiV2 = JSON.parse(
+            document.getElementById("apiV2").value
+        );
+
+    } catch (e) {
+
+        error.innerText = "Invalid JSON format.";
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch("/analyze", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                api_v1: apiV1,
+                api_v2: apiV2
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            error.innerText = data.error;
+            return;
+
+        }
+
+
+        document.getElementById("result").style.display = "block";
+
+        document.getElementById("totalChanges").innerText =
+            data.total_changes;
+
+        document.getElementById("breakingChanges").innerText =
+            data.breaking_changes;
+
+        document.getElementById("safeChanges").innerText =
+            data.safe_changes;
+        document.getElementById("score").innerText = data.score + "%";   
+
+
+        const riskElement = document.getElementById("risk");
+
+        riskElement.innerText = data.risk;
+
+        riskElement.className = "";
+
+        if (data.risk === "HIGH") {
+            riskElement.classList.add("risk-high");
+        }
+
+        else if (data.risk === "MEDIUM") {
+            riskElement.classList.add("risk-medium");
+        }
+
+        else {
+            riskElement.classList.add("risk-low");
+        }
+
+
+        const changesList =
+            document.getElementById("changesList");
+
+        changesList.innerHTML = "";
+
+
+        data.changes.forEach(change => {
+
+            const div = document.createElement("div");
+
+            div.className =
+                "change " + change.type;
+
+
+            div.innerHTML = `
+                <h3>${change.category}</h3>
+                <p><strong>What changed:</strong>
+                    ${change.message}
+                </p>
+                <p><strong>Impact:</strong>
+                    ${change.impact}
+                </p>
+                <p><strong>Suggested Fix:</strong>
+                    ${change.fix}
+                </p>
+            `;
+
+            changesList.appendChild(div);
+
+        });
+
+    }
+
+    catch (e) {
+
+        error.innerText =
+            "Server connection failed. Make sure Flask is running.";
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
