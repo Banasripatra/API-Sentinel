@@ -44,6 +44,12 @@ The system can detect changes such as:
 - Field Added
 - Field Removed
 - Field Type Changed
+## Purpose
+To detect API breaking changes before they affect applications.
+## Scope
+API Sentinel compares two API versions and identifies breaking and safe changes.
+## Author
+Banasri Patra
 
 Example:
 
@@ -55,9 +61,3 @@ Example:
   "name": "string",
   "age": "integer"
 }
-## Purpose
-To detect API breaking changes before they affect applications.
-## Scope
-API Sentinel compares two API versions and identifies breaking and safe changes.
-## Author
-Banasri Patra
